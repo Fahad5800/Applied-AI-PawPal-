@@ -41,6 +41,9 @@ Response:
 - Why is that tradeoff reasonable for this scenario?
 
 ---
+Response:
+- The scheduler uses a greedy approach: it sorts tasks by priority (highest first), then by duration (longest first), then by pet name, and assigns each task to the earliest available time slot that fits. This can lead to suboptimal schedules where a long, lower-priority task blocks time that could have been used for multiple shorter, higher-priority tasks later in the day.
+- This tradeoff is reasonable for this scenario because it provides a simple, predictable scheduling algorithm that is easy to understand and implement, prioritizing urgent tasks first. For a pet care app with typically short tasks and limited owner availability, the greedy method usually produces acceptable results without the complexity of more advanced optimization algorithms like bin packing or constraint satisfaction.
 
 ## 3. AI Collaboration
 

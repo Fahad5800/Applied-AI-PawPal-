@@ -22,6 +22,19 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+# AI - Content
+## Smarter Scheduling
+
+This version includes advanced scheduling features for better pet care management:
+
+- **Time-based sorting**: Tasks can be sorted by scheduled time using `sort_by_time()` for chronological ordering.
+- **Flexible filtering**: Filter tasks by pet name or completion status with `filter_tasks(pet_name, completed)`.
+- **Recurring task support**: Daily, weekly, and monthly tasks automatically reschedule after completion using `mark_complete_and_reschedule()`.
+- **Conflict detection**: Detects time overlaps between tasks and logs warnings without crashing the program, ensuring robust scheduling.
+
+These features make PawPal+ more intelligent and user-friendly for managing complex pet care routines.
+
+=================================
 ## Getting started
 
 ### Setup
