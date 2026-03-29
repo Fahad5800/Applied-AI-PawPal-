@@ -133,6 +133,47 @@ def test_recurring_task_auto_renew_on_complete():
     assert len(pet.tasks) == 1  # Same task instance, not new one
 
 
+def test_generate_plan_sessions_for_multiple_days():
+    owner = Owner(name="Test", available_hours=[8, 9, 10])
+    pet = make_pet()
+    owner.add_pet(pet)
+    sched = Scheduler(owner)
+
+    recurring = Task(task_type="Session Walk", duration=30, priority=1, frequency=Frequency.DAILY, pet=pet)
+    sched.add_task(recurring)
+
+    for d in range(3):
+        day = date.today() + timedelta(days=d)
+        sched.generate_plan(day)
+
+        assert recurring.is_due_on(day)
+        assert recurring.scheduled_time is not None
+        assert sched.daily_plan[0]["task_type"] == "Session Walk"
+
+    sched.mark_task_complete(recurring.id)
+    assert recurring.start_date == date.today() + timedelta(days=1)
+    assert recurring.completed is False
+    assert recurring.scheduled_time is None
+
+
+def test_get_tasks_sorted_by_time_will_prioritize_by_priority_duration_and_pet():
+    owner = Owner(name="Test", available_hours=[8, 9, 10])
+    pet = make_pet()
+    owner.add_pet(pet)
+    sched = Scheduler(owner)
+
+    t1 = Task(task_type="A", duration=60, priority=1, frequency=Frequency.DAILY, pet=pet)
+    t2 = Task(task_type="B", duration=30, priority=1, frequency=Frequency.DAILY, pet=pet)
+    sched.add_task(t1)
+    sched.add_task(t2)
+
+    sched.generate_plan(date.today())
+    sorted_tasks = sched.get_tasks_sorted_by_time(date.today())
+
+    assert [t.task_type for t in sorted_tasks] == ["A", "B"]
+    assert sorted_tasks[0].scheduled_time < sorted_tasks[1].scheduled_time
+
+
 if __name__ == "__main__":
     test_mark_complete_changes_status()
     print("PASS  test_mark_complete_changes_status")

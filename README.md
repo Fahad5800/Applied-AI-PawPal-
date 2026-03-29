@@ -34,6 +34,26 @@ This version includes advanced scheduling features for better pet care managemen
 
 These features make PawPal+ more intelligent and user-friendly for managing complex pet care routines.
 
+## Testing PawPal+
+
+Run the test suite with:
+
+```bash
+python -m pytest
+```
+
+The tests cover the following behaviors:
+
+- **Task completion**: Marking a task complete changes its status correctly.
+- **Adding tasks**: Adding tasks to a pet increases the task count as expected.
+- **Filtering**: Tasks can be filtered by pet name and by completion status.
+- **Conflict detection (capacity)**: When tasks exceed available hours, the scheduler logs the overflow task as a conflict.
+- **Time conflict detection**: Overlapping scheduled times between tasks are detected and reported.
+- **Sorting by time**: `get_tasks_sorted_by_time()` returns tasks in chronological order after a plan is generated.
+- **Recurring task rescheduling**: Completing a daily task automatically resets it and advances its start date by one day.
+- **Multi-day planning**: A recurring task can be planned and verified across multiple consecutive days.
+- **Priority + duration sorting**: When tasks share the same priority, longer-duration tasks are scheduled earlier.
+
 =================================
 ## Getting started
 
