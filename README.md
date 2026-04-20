@@ -1,86 +1,112 @@
-# PawPal+
+# PawPal+ 🐾
 
-**PawPal+** is a Streamlit app that helps pet owners stay consistent with daily pet care. Enter your pet's profile, build a task list, and generate an optimized daily schedule — the app handles prioritization, time-slot fitting, conflict detection, and recurring task management automatically.
+> An AI-powered pet care scheduling system that helps owners stay consistent with daily pet care.
 
----
-
-## Features
-
-### Priority-Based Scheduling
-When you generate a schedule, PawPal+ sorts all due tasks by **priority level (1 = highest)**, then by **duration (longest first)**, then alphabetically by pet name. Higher-priority tasks are assigned the earliest available time slots so the most important care happens first.
-
-### Chronological Schedule Display
-After a plan is generated, tasks are displayed in **ascending time order** using `get_tasks_sorted_by_time()`. Each row shows the assigned start time, task name, pet, duration, and priority label — giving you a clear, readable daily agenda.
-
-### Time-Slot Fitting
-The scheduler converts the owner's available hours into minute-level intervals and greedily assigns each task a contiguous block that fits its duration. Tasks that cannot fit into any remaining slot are flagged as unscheduled rather than silently dropped.
-
-### Capacity Conflict Warnings
-If there is not enough available time to fit all due tasks, PawPal+ surfaces a **warning banner** listing every task that could not be scheduled, along with its duration and priority, so you know exactly what was left out and why.
-
-### Time-Overlap Conflict Detection
-After slotting tasks, `detect_time_conflicts()` scans all scheduled tasks for **overlapping time intervals** using start/end time comparison. Each overlap is logged and shown in a collapsible panel with both task names and the exact conflicting time range.
-
-### Task Filtering
-`filter_tasks(pet_name, completed)` lets you query the task list by pet or completion status. The pending-tasks panel uses this to show only incomplete tasks, sorted by priority, with summary metrics for total, high-priority, and due-today counts.
-
-### Recurring Task Auto-Rescheduling
-Tasks marked as **daily, weekly, or monthly** automatically reset after completion via `mark_complete_and_reschedule()`. The task's start date advances to the next correct occurrence (tomorrow for daily, same weekday for weekly, same calendar day for monthly), and the completion flag is cleared so the task reappears on its next due date.
-
-### Non-Crashing Conflict Logging
-All conflict detection runs through `ConflictLogger`, which records warnings with timestamps and severity levels and logs them to the console — without raising exceptions or interrupting the schedule generation. The app always produces the best schedule it can and reports problems separately.
+## Original Project
+This project is an extension of **PawPal+** built during Modules 1-3. The original system allowed pet owners to create pet profiles, add care tasks, and generate a priority-based daily schedule. It included conflict detection, recurring task management, and a Streamlit UI.
 
 ---
 
-## Testing PawPal+
+## What's New in the Final Version
+- **AI Care Advisor** — Ask natural language pet care questions and get answers powered by Gemini AI with a confidence score
+- **AI Task Suggester** — Automatically generate a starter task list based on your pet's species and age
+- **Guardrails** — Error handling and fallback messaging when the AI is unavailable
 
-Run the test suite with:
+---
 
+## System Architecture
+![System Architecture](assets/system_architecture.png)
+
+The system has four main layers:
+1. **Streamlit UI** (`app.py`) — the user-facing interface
+2. **Core Scheduler** (`pawpal_system.py`) — handles task management, priority sorting, and conflict detection
+3. **AI Advisor** (`ai_advisor.py`) — connects to Gemini API for pet care advice and task suggestions
+4. **Testing + Reliability** — pytest suite, conflict logging, and confidence scoring
+
+---
+
+## Setup Instructions
+
+### 1. Clone the repo
 ```bash
-python -m pytest
+git clone https://github.com/Fahad5800/Applied-AI-PawPal-.git
+cd Applied-AI-PawPal-
 ```
 
-The tests cover:
-
-| Test | What it verifies |
-|---|---|
-| `test_mark_complete_changes_status` | Completing a task sets `completed = True` |
-| `test_add_task_increases_pet_task_count` | `pet.add_task()` grows the task list correctly |
-| `test_filter_tasks_by_pet_and_status` | `filter_tasks()` returns the right subset by pet and status |
-| `test_generate_plan_conflict_when_insufficient_hours` | Overflow tasks are recorded in `scheduler.conflicts` |
-| `test_get_tasks_sorted_by_time` | Higher-priority tasks receive earlier time slots |
-| `test_detect_time_conflicts` | Manually overlapping times are caught and typed as `time_overlap` |
-| `test_recurring_task_auto_renew_on_complete` | Daily task resets and advances `start_date` by one day |
-| `test_generate_plan_sessions_for_multiple_days` | Recurring task plans correctly across three consecutive days |
-| `test_get_tasks_sorted_by_time_will_prioritize_by_priority_duration_and_pet` | Same-priority tasks are ordered longest-duration first |
-
----
-
-## UML Class Diagram
-
-![PawPal+ UML Diagram](Assets/Pawpal+%20Mermaid.js.png)
-
----
-
-## Getting Started
-
-### Setup
-
+### 2. Create a virtual environment
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+.venv\Scripts\activate  # Windows
+```
+
+### 3. Install dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-### Running the app
+### 4. Add your API key
+Create a `.env` file in the project root:
+GEMINI_API_KEY=your-key-here
 
+### 5. Run the app
 ```bash
 streamlit run app.py
 ```
 
-### Usage
+---
 
-1. Enter an owner name, pet name, and species — click **Create Owner & Pet**.
-2. Add tasks with a title, duration, priority, and frequency — click **Add task**.
-3. Click **Generate schedule** to build today's plan.
-4. Review the sorted schedule table, unscheduled task warnings, and any conflict details.
+## Sample Interactions
+
+### Example 1 — Ask the AI Advisor
+**Input:** "How often should I walk my dog?"
+**Pet:** Buddy, Dog, Age 3
+**Output:** "For an adult dog like 3-year-old Buddy, aim for at least two walks per day. These walks are crucial for his physical exercise, mental stimulation, and regular potty breaks."
+**Confidence:** 100%
+
+### Example 2 — AI Task Suggestions
+**Input:** Click "Suggest Tasks with AI" for a 3-year-old dog
+**Output:** Morning Walk (30 min, daily), Feed Breakfast (10 min, daily), Evening Play (20 min, daily), Grooming (15 min, weekly), Vet Checkup (60 min, monthly)
+
+### Example 3 — Conflict Detection
+**Input:** Two tasks scheduled at overlapping times
+**Output:** Warning banner showing both task names and the exact overlapping time range
+
+---
+
+## Design Decisions
+- **Gemini AI** was chosen for the free tier availability suitable for a student project
+- **Greedy scheduling algorithm** was kept from the original — it's simple, fast, and predictable
+- **Confidence scoring** was added to help users understand when AI advice is reliable vs uncertain
+- **Session state** in Streamlit was used to persist suggested tasks between button clicks, solving a common re-render issue
+
+---
+
+## Testing Summary
+Run the full test suite with:
+```bash
+python -m pytest
+```
+
+| Test | Result |
+|------|--------|
+| Mark task complete | ✅ Pass |
+| Add task increases count | ✅ Pass |
+| Filter tasks by pet and status | ✅ Pass |
+| Conflict when insufficient hours | ✅ Pass |
+| Tasks sorted by time | ✅ Pass |
+| Detect time conflicts | ✅ Pass |
+| Recurring task auto-renew | ✅ Pass |
+| Multi-day plan generation | ✅ Pass |
+| Priority + duration ordering | ✅ Pass |
+
+9/9 tests passing.
+
+---
+
+## Reflection
+This project taught me how to integrate AI into a real working application responsibly. The biggest challenge was handling API rate limits and model availability gracefully — the app needed to keep working even when the AI was unavailable. I learned that guardrails and fallback messaging are just as important as the AI features themselves.
+
+---
+
+## Demo
+🎥 [Loom Walkthrough](your-loom-link-here) — *(add after recording)*

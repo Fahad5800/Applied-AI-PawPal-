@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import date
 from pawpal_system import Frequency, Pet, Task, Owner, Scheduler
+from ai_advisor import ask_pet_advisor, suggest_tasks
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -186,3 +187,79 @@ if st.button("Generate schedule"):
                     st.caption(c["time"])
         elif not unscheduled:
             st.success("No conflicts detected — all tasks fit cleanly.")
+
+st.divider()
+
+# ---------------------------------------------------------------------------
+# AI Advisor
+# ---------------------------------------------------------------------------
+st.subheader("🤖 AI Pet Care Advisor")
+
+if st.session_state.owner is None:
+    st.info("Create an owner and pet first to use the AI Advisor.")
+else:
+    owner = st.session_state.owner
+    pet = owner.pets[0]
+
+    # --- Ask a question ---
+    st.write("**Ask a pet care question:**")
+    question = st.text_input("Your question", value="How often should I walk my dog?")
+
+    if st.button("Ask AI Advisor"):
+        with st.spinner("Thinking..."):
+            result = ask_pet_advisor(question, pet.name, pet.species, pet.age)
+
+        if result["success"]:
+            st.success(result["answer"])
+            confidence = result["confidence"]
+            if confidence >= 0.8:
+                st.metric("Confidence Score", f"{confidence:.0%}", "High confidence")
+            elif confidence >= 0.5:
+                st.metric("Confidence Score", f"{confidence:.0%}", "Medium confidence")
+            else:
+                st.metric("Confidence Score", f"{confidence:.0%}", "Low confidence")
+        else:
+            st.error("AI Advisor is unavailable right now. Please try again shortly.")
+
+    st.divider()
+
+    # --- Suggest Tasks ---
+    st.write("**Let AI suggest tasks for your pet:**")
+    
+    if "suggested_tasks" not in st.session_state:
+        st.session_state.suggested_tasks = []
+
+    if st.button("Suggest Tasks with AI"):
+        with st.spinner("Generating task suggestions..."):
+            result = suggest_tasks(pet.name, pet.species, pet.age)
+
+        if result["success"] and result["tasks"]:
+            st.session_state.suggested_tasks = result["tasks"]
+        else:
+            st.error("Could not generate suggestions right now. Please try again shortly.")
+
+    if st.session_state.suggested_tasks:
+        st.success(f"Here are {len(st.session_state.suggested_tasks)} suggested tasks for {pet.name}:")
+
+        for t in st.session_state.suggested_tasks:
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.write(f"**{t['task']}**")
+            with col2:
+                st.write(f"⏱ {t['duration_minutes']} min")
+            with col3:
+                st.write(f"📅 {t['frequency'].capitalize()}")
+
+        if st.button("Add All Suggested Tasks"):
+            scheduler = st.session_state.scheduler
+            for t in st.session_state.suggested_tasks:
+                task = Task(
+                    task_type=t["task"],
+                    duration=int(t["duration_minutes"]),
+                    priority=int(t["priority"]),
+                    frequency=Frequency(t["frequency"]),
+                    pet=pet,
+                )
+                scheduler.add_task(task)
+            st.session_state.suggested_tasks = []
+            st.success("All suggested tasks added!")
