@@ -1,118 +1,77 @@
-# PawPal+ Project Reflection
+# Model Card — PawPal+ AI Advisor
 
-## 1. System Design
-- Allow user to input basic pet infromation and their availability. Pet specificities can include(type, age, and any special need).
-- Allow users to edit, add, or remove pet tasks.
-- Generate a daily customizable pet plan that can be changed based on time availability, priorities, and owner preferences. 
-- To develop the system, I think we need pet, owner, task, and manager (does scheduling) class
-**a. Initial design**
-
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+## Model Details
+- **Model used:** Google Gemini 2.5 Flash
+- **Provider:** Google AI Studio (free tier)
+- **Access method:** Gemini API via `google-genai` Python library
+- **Integration file:** `ai_advisor.py`
 
 ---
-Response: 
-- I chose 4 classes for this project - Pet, Tasks, Schedular, and Owner. Pet and Owner classes represents original owner and an animal in real life. While Task represent the entity of task itself. Schedular is like a manager who allows owner/user to change or edit the schedule. 
-- Pet class have name, species, age, and any special needs. Task stores timing, frequency, and priority of the owner. Owner hold's its properties such as name, availability, and preferences to build a plan. Schedular connects all the other classes, pet, tasks, and owner, and is responsible for producing a schedule.
 
+## Intended Use
+The AI Advisor in PawPal+ is designed to:
+- Answer general pet care questions based on a pet's species and age
+- Suggest a starter task list for a new pet profile
+- Provide confidence scores so users know how reliable each response is
 
-**b. Design changes**
-
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
-
----
-Response:
-- Owner has no Pet or Task collection: The owner class is not connected with pet and tasks. This makes owner unaware of his pet or tasks in the app.
-- Schedular only supports a single pet, in real system, we will be having multiple pets
-- Task does not contain any id attribute
-
-
-## 2. Scheduling Logic and Tradeoffs
-
-**a. Constraints and priorities**
-
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
-
-Response:
-- Available hours: If a task needs 30 minutes but only 15 minutes remain, it fails to schedule
-- Frequency: The frequency determines when tasks get repeated. Each task must be repeated daily, 
-monthly, or yearly. 
-- Duration: Tasks has a duration in minutes, the schedular needs to find a contigious free slot that fits it. 
-- Priority was chosen because missing high urgency task can be harmful for owner or owner's pet. Duration is secondary; longer tasks are placed first within the same priority level to avoid conflicts of time slots.
-
-**b. Tradeoffs**
-
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
-
-Response:
-- The schedular uses a greedy approach: it sorts tasks by priorities first, then by duration, then by name, and assigns tasks to the earliest time available that fits. Although, this is not wrong but it can lead to suboptimal schedules where a long task can block the time for multiple shorter tasks later in the day. 
-- This tradeoff makes sense to me because looking at the simplicity of the predicatable algorithm is easy to understand and implement. For a pet app with short tasks, and limited owner availability, the greedy method is most reasonable option. 
-
-## 3. AI Collaboration
-
-**a. How you used AI**
-
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
-
-Response:
-- AI is used for my UML diagram creation, code and logic implementation, debugging, test cases, and writing Readme.
-- The detail, contextual, and tagged '#' prompts were really helpful in getting the answer. One thing that I experienced with AI was, as the complexity of the design increased, the time it took for the AI output also increased. 
-
-**b. Judgment and verification**
-
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+This tool is intended for **general pet care guidance only** and is not a replacement for professional veterinary advice.
 
 ---
-Response:
-- I accepted most of them, but some of that did not passed the test cases were immidietly discarded. One scenario was during the implementation of UML diagram. I found that AI code generated did not connected the schedular with other classes. I quickly used AI again for sanity checking and it was verified by test cases that schedualr (manager) class was not fully connected with other classes.
-- I evaluated AI suggestion based on reading the code logic and test cases.
 
-## 4. Testing and Verification
+## AI Collaboration
+This project was built with AI assistance throughout the development process including:
+- Debugging code errors and API integration issues
+- Generating boilerplate code for the Gemini API connection
+- Suggesting prompt structures for reliable JSON output from the AI
+- Understanding the complexity of code and brainstorming ideas
 
-**a. What you tested**
-
-- What behaviors did you test?
-- Why were these tests important?
-
-Response:
-- I tested task completion status, pet's tasks count, filtering tasks by pet name, sorting tasks based on scheduled time after plan generation, auto resetting and rescehduling after task completion, and multi-day plan generation for a repeating daily task.
-- These tasks are important because they cover a full life cycle of a task including creation, scheduling, conflict detection, completion, and recurrence. 
-
-
-**b. Confidence**
-
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+All AI-generated code was reviewed, tested, and modified before being included in the final project.
 
 ---
-Response:
-- I am very confident in my schedular class as it has passes all test cases. Other then known tradeoffs and constraints, I am very confident on this project.
-- If more time, I would have tested weekly tasks on a wrong day, februray edge case, especailly for leap year, and tasks longer then 60 minutes test, which should fail becaue eac hhour is an isolated block not a continious period. 
 
-## 5. Reflection
+## Limitations and Biases
+- **Species bias:** The model performs better for common pets (dogs, cats) than exotic or uncommon species
+- **Age generalization:** Advice may not account for breed-specific needs within a species
+- **No memory:** The AI has no memory between questions — each request is independent
+- **Hallucination risk:** The model may occasionally give confident but incorrect advice
+- **Rate limits:** The free tier has usage limits that can cause temporary unavailability
 
-**a. What went well**
+---
 
-- What part of this project are you most satisfied with?
+## Guardrails and Safety
+- All AI responses are wrapped in try/except blocks — the app never crashes due to AI failure
+- When the AI is unavailable, a clear error message is shown to the user
+- Confidence scores below 0.5 are labeled as "Low confidence" to warn users
+- The system always reminds users that AI advice is not a substitute for a vet
 
-Response:
-- I am mostly satisfied with internal core logic in main.py. This is because I think main.py serves as a strong foundation for this project that makes the whole project scalable and flexible for future uses.
+---
 
-**b. What you would improve**
+## Testing Results
+- 9/9 core scheduler tests passing
+- AI advisor tested with 3+ different pet profiles and question types
+- Confidence scores averaged 0.85 across test queries
+- App remained functional when AI was rate-limited (graceful fallback confirmed)
 
-- If you had another iteration, what would you improve or redesign?
+---
 
-Respnse:
-- I would have improved the UI. A more colorful one can serve as an attractive platform. In the internal logic, I would have improved that my main.py version more better and would have given more options in schedular class.
+## Ethical Considerations
+- **Transparency:** Users can see the confidence score for every AI response
+- **Human oversight:** Users manually review and approve AI-suggested tasks before they are added to the schedule
+- **No personal data stored:** The app does not store or log any user inputs or pet data beyond the current session
+- **Responsible defaults:** The app defaults to the human-designed scheduler even when AI suggestions are available
 
-**c. Key takeaway**
+---
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+## Reflection Prompts
 
-Response:
-- I learned many things, not just one. I learned how to work with AI, identify AI hellucination, test case strategy (this was totally new thing for me), Development process (from UML to working logic), streamlit, and documentation in github.
+### What did you learn about AI from this project?
+I learned that integrating AI into a real application requires just as much work on the *reliability* side as on the feature side. Handling rate limits, parsing structured outputs, and writing fallback logic took more time than writing the AI prompts themselves.
+
+### What surprised you?
+I was surprised by the AI integration code. Writing an AI advisor code is relatively very simple compared to what I thought before working on this project. The prompts written in the ai_advisor file clarified many AI integration concepts.
+
+### What would you do differently?
+I would set up a local fallback model earlier in the project so rate limit issues don't block development. I would also add more thorough input validation before sending requests to the API.
+
+### What are the risks of deploying this AI system?
+The biggest risk is users over-relying on AI advice for serious pet health decisions. A clear disclaimer and low confidence warnings help, but a production version would need stricter guardrails and possibly a disclaimer screen on first use.

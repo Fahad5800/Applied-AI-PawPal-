@@ -3,7 +3,7 @@
 > An AI-powered pet care scheduling system that helps owners stay consistent with daily pet care.
 
 ## Original Project
-This project is an extension of **PawPal+** built during Modules 1-3. The original system allowed pet owners to create pet profiles, add care tasks, and generate a priority-based daily schedule. It included conflict detection, recurring task management, and a Streamlit UI.
+This project is an extension of **PawPal+** built during Module 3. The original system allowed pet owners to create pet profiles, add care tasks, and generate a priority-based daily schedule. It included conflict detection, recurring task management, and a Streamlit UI.
 
 ---
 
@@ -11,11 +11,12 @@ This project is an extension of **PawPal+** built during Modules 1-3. The origin
 - **AI Care Advisor** — Ask natural language pet care questions and get answers powered by Gemini AI with a confidence score
 - **AI Task Suggester** — Automatically generate a starter task list based on your pet's species and age
 - **Guardrails** — Error handling and fallback messaging when the AI is unavailable
+- **Bug Fixes** — Updating and fixing bugs from previous PawPal+ system like deletion of tasks and updating PawPal+ UML diagram.
 
 ---
 
 ## System Architecture
-![System Architecture](assets/system_architecture.png)
+![System Architecture](C:\Users\h\Applied-AI-PawPal-\assets\System Architecture.png)
 
 The system has four main layers:
 1. **Streamlit UI** (`app.py`) — the user-facing interface
