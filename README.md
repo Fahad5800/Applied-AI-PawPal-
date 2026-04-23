@@ -16,7 +16,7 @@ This project is an extension of **PawPal+** built during Module 3. The original 
 ---
 
 ## System Architecture
-![System Architecture](C:\Users\h\Applied-AI-PawPal-\assets\System Architecture.png)
+![System Architecture](assets/System%20Architecture.png)
 
 The system has four main layers:
 1. **Streamlit UI** (`app.py`) — the user-facing interface
@@ -75,7 +75,7 @@ streamlit run app.py
 ---
 
 ## Design Decisions
-- **Gemini AI** was chosen for the free tier availability suitable for a student project
+- **Gemini AI** was chosen for the free tier availability suitable for this project
 - **Greedy scheduling algorithm** was kept from the original — it's simple, fast, and predictable
 - **Confidence scoring** was added to help users understand when AI advice is reliable vs uncertain
 - **Session state** in Streamlit was used to persist suggested tasks between button clicks, solving a common re-render issue
@@ -84,28 +84,35 @@ streamlit run app.py
 
 ## Testing Summary
 Run the full test suite with:
-```bash
+\```bash
 python -m pytest
-```
+\```
 
-| Test | Result |
-|------|--------|
-| Mark task complete | ✅ Pass |
-| Add task increases count | ✅ Pass |
-| Filter tasks by pet and status | ✅ Pass |
-| Conflict when insufficient hours | ✅ Pass |
-| Tasks sorted by time | ✅ Pass |
-| Detect time conflicts | ✅ Pass |
-| Recurring task auto-renew | ✅ Pass |
-| Multi-day plan generation | ✅ Pass |
-| Priority + duration ordering | ✅ Pass |
+**What worked:**
+- All 9 core scheduler tests pass consistently
+- Conflict detection correctly identifies overlapping time slots
+- Recurring task rescheduling works across daily, weekly, and monthly frequencies
+- AI advisor returns structured responses with confidence scores
 
-9/9 tests passing.
+**What didn't work:**
+- Gemini API rate limits caused failures during rapid testing — solved by adding try/except with fallback messages
+- JSON parsing from AI occasionally failed when the model added extra text — solved by stripping markdown code blocks before parsing
+
+**What I learned:**
+- Reliable AI integration requires as much error handling as feature code
+- Prompt engineering matters — small changes in how you ask for JSON output significantly affect reliability
 
 ---
 
 ## Reflection
-This project taught me how to integrate AI into a real working application responsibly. The biggest challenge was handling API rate limits and model availability gracefully — the app needed to keep working even when the AI was unavailable. I learned that guardrails and fallback messaging are just as important as the AI features themselves.
+This project taught me how to integrate AI into a real working application. The biggest challenge was handling API rate limits and model availability gracefully — the app needed to keep working even when the AI was unavailable. I learned that guardrails and fallback messaging are just as important as the AI features themselves.
+
+## Reflection
+This project taught me that building with AI is really two jobs in one: building the feature, and building the safety net around it. The AI advisor only works well because of the guardrails around it — without error handling, rate limit fallbacks, and confidence scoring, it would feel unreliable to a real user.
+
+I also learned that prompt design is a form of engineering. Getting the model to return clean, parseable JSON every time required careful iteration on the prompt format.
+
+If I were to extend this further, I would add a local fallback model so the app works completely offline, and a more sophisticated RAG system that pulls from a real pet care knowledge base rather than relying solely on the model's training data.
 
 ---
 

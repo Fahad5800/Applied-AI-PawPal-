@@ -71,7 +71,7 @@ I learned that integrating AI into a real application requires just as much work
 I was surprised by the AI integration code. Writing an AI advisor code is relatively very simple compared to what I thought before working on this project. The prompts written in the ai_advisor file clarified many AI integration concepts.
 
 ### What would you do differently?
-I would set up a local fallback model earlier in the project so rate limit issues don't block development. I would also add more thorough input validation before sending requests to the API.
+I would set up a local Heuristic model earlier in the project so rate limit issues don't block development. I would also add more thorough input validation before sending requests to the API. 
 
 ### What are the risks of deploying this AI system?
-The biggest risk is users over-relying on AI advice for serious pet health decisions. A clear disclaimer and low confidence warnings help, but a production version would need stricter guardrails and possibly a disclaimer screen on first use.
+This AI system is not perfect. Making a full AI system requires training, checking the rules, guardrails, and many other parameters. This model is just for concept practices. If this AI is deployed, then there is a risk that it will provide responses that can harm pets.
