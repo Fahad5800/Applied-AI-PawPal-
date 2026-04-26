@@ -137,7 +137,7 @@ if st.session_state.scheduler:
 
         st.dataframe(
             rows,
-            use_container_width=True,
+            width='stretch',
             hide_index=True,
             column_config={
                 "Priority": st.column_config.TextColumn("Priority", width="medium"),
@@ -251,7 +251,7 @@ if st.session_state.sorted_tasks:
 
     st.dataframe(
         schedule_rows,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         column_config={
             "Status": st.column_config.TextColumn("Status", width="small"),
