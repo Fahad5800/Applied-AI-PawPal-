@@ -21,16 +21,27 @@ if "scheduler" not in st.session_state:
 st.subheader("Owner & Pet")
 
 owner_name = st.text_input("Owner name", value="Jordan")
-pet_name = st.text_input("Pet name", value="Mochi")
-species = st.selectbox("Species", ["dog", "cat", "other"])
 
-if st.button("Create Owner & Pet"):
+if st.button("Create Owner"):
     owner = Owner(owner_name, available_hours=list(range(8, 18)))
-    pet = Pet(name=pet_name, species=species, age=1)
-    owner.add_pet(pet)
     st.session_state.owner = owner
     st.session_state.scheduler = Scheduler(owner)
-    st.success(f"Owner **{owner_name}** created with pet **{pet_name}** ({species}).")
+    st.success(f"Owner **{owner_name}** created!")
+
+if st.session_state.owner:
+    st.write("**Add a pet:**")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        pet_name = st.text_input("Pet name", value="Mochi")
+    with col2:
+        species = st.selectbox("Species", ["dog", "cat", "other"])
+    with col3:
+        age = st.number_input("Age", min_value=0, max_value=30, value=1)
+
+    if st.button("Add Pet"):
+        pet = Pet(name=pet_name, species=species, age=age)
+        st.session_state.owner.add_pet(pet)
+        st.success(f"Pet **{pet_name}** ({species}, age {age}) added!")
 
 if st.session_state.owner:
     owner = st.session_state.owner
@@ -48,8 +59,7 @@ st.divider()
 # Add Task
 # ---------------------------------------------------------------------------
 st.subheader("Add a Task")
-
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
     task_title = st.text_input("Task title", value="Morning walk")
 with col2:
@@ -58,13 +68,23 @@ with col3:
     priority = st.selectbox("Priority (1=high)", [1, 2, 3, 4, 5], index=0)
 with col4:
     frequency = st.selectbox("Frequency", [f.value for f in Frequency])
+with col5:
+    if st.session_state.owner and st.session_state.owner.pets:
+        pet_names = [p.name for p in st.session_state.owner.pets]
+        selected_pet_for_task = st.selectbox("Pet", pet_names, key="selected_pet_for_task")
+    else:
+        st.selectbox("Pet", ["No pets yet"], disabled=True)
 
 if st.button("Add task"):
     if st.session_state.scheduler is None:
         st.error("Create an owner and pet first.")
+    elif not st.session_state.owner.pets:
+        st.error("Add at least one pet first.")
     else:
         scheduler: Scheduler = st.session_state.scheduler
-        pet = st.session_state.owner.pets[0]
+        pet_names = [p.name for p in st.session_state.owner.pets]
+        selected_pet_name = st.session_state.get("selected_pet_for_task", pet_names[0])
+        pet = st.session_state.owner.get_pet(selected_pet_name)
         task = Task(
             task_type=task_title,
             duration=int(duration),
@@ -73,8 +93,7 @@ if st.button("Add task"):
             pet=pet,
         )
         scheduler.add_task(task)
-        st.success(f"Task **{task_title}** added — {duration} min, priority {priority}, {frequency}.")
-
+        st.success(f"Task **{task_title}** added for **{pet.name}** — {duration} min, priority {priority}, {frequency}.")
 st.divider()
 
 # ---------------------------------------------------------------------------
@@ -202,12 +221,17 @@ st.divider()
 # AI Advisor
 # ---------------------------------------------------------------------------
 st.subheader("🤖 AI Pet Care Advisor")
-
-if st.session_state.owner is None:
-    st.info("Create an owner and pet first to use the AI Advisor.")
+if st.session_state.owner is None or not st.session_state.owner.pets:
+    st.info("Create an owner and add at least one pet to use the AI Advisor.")
 else:
     owner = st.session_state.owner
-    pet = owner.pets[0]
+    pet_names = [p.name for p in owner.pets]
+    selected_pet_name = st.selectbox(
+        "Select pet to ask about",
+        pet_names,
+        key="ai_advisor_pet"
+    )
+    pet = owner.get_pet(selected_pet_name)
 
     # --- Ask a question ---
     st.write("**Ask a pet care question:**")
@@ -233,21 +257,27 @@ else:
 
     # --- Suggest Tasks ---
     st.write("**Let AI suggest tasks for your pet:**")
-    
+
+    suggest_pet_name = st.selectbox(
+        "Select pet to suggest tasks for",
+        pet_names,
+        key="suggest_pet_select"
+    )
+    suggest_pet = owner.get_pet(suggest_pet_name)
+
     if "suggested_tasks" not in st.session_state:
         st.session_state.suggested_tasks = []
 
     if st.button("Suggest Tasks with AI"):
         with st.spinner("Generating task suggestions..."):
-            result = suggest_tasks(pet.name, pet.species, pet.age)
-
+            result = suggest_tasks(suggest_pet.name, suggest_pet.species, suggest_pet.age)
         if result["success"] and result["tasks"]:
             st.session_state.suggested_tasks = result["tasks"]
         else:
             st.error("Could not generate suggestions right now. Please try again shortly.")
 
     if st.session_state.suggested_tasks:
-        st.success(f"Here are {len(st.session_state.suggested_tasks)} suggested tasks for {pet.name}:")
+        st.success(f"Here are {len(st.session_state.suggested_tasks)} suggested tasks for {suggest_pet.name}:")
 
         for t in st.session_state.suggested_tasks:
             col1, col2, col3 = st.columns(3)
@@ -266,7 +296,7 @@ else:
                     duration=int(t["duration_minutes"]),
                     priority=int(t["priority"]),
                     frequency=Frequency(t["frequency"]),
-                    pet=pet,
+                    pet=suggest_pet,
                 )
                 scheduler.add_task(task)
             st.session_state.suggested_tasks = []

@@ -115,13 +115,6 @@ class Task:
     completed: bool = False
     id: int = field(default_factory=lambda: next(_task_id_counter))
 
-    def edit_details(self, task_type: str, duration: int, priority: int, frequency: Frequency):
-        """Update the task's core attributes in place."""
-        self.task_type = task_type
-        self.duration = duration
-        self.priority = priority
-        self.frequency = frequency
-
     def is_due_on(self, check_date: date) -> bool:
         """Return True if this task should occur on check_date."""
         if check_date < self.start_date:
