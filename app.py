@@ -116,6 +116,15 @@ if st.session_state.scheduler:
                 "Duration (min)": st.column_config.NumberColumn("Duration (min)", format="%d min"),
             },
         )
+
+        st.write("**Delete a task:**")
+        task_options = {f"{t.task_type} ({t.pet.name})": t.id for t in pending_sorted}
+        selected_task = st.selectbox("Select task to delete", list(task_options.keys()))
+        if st.button("Delete Task"):
+            task_id = task_options[selected_task]
+            st.session_state.scheduler.remove_task(task_id)
+            st.success(f"Task **{selected_task}** deleted!")
+            st.rerun()
     else:
         st.info("No pending tasks. Add one above.")
 
@@ -186,8 +195,7 @@ if st.button("Generate schedule"):
                     st.warning(f"**{c['task1']}** overlaps **{c['task2']}**")
                     st.caption(c["time"])
         elif not unscheduled:
-            st.success("No conflicts detected — all tasks fit cleanly.")
-
+            st.success("No conflicts detected — all tasks fit cleanly.")    
 st.divider()
 
 # ---------------------------------------------------------------------------

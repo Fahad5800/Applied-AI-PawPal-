@@ -4,13 +4,13 @@ import logging
 from typing import List, Dict, Any, Optional
 from enum import Enum
 
-
+# WarningLevel: Three labels: INFO, WARNING, and CRITICAL.
 class WarningLevel(str, Enum):
     INFO = "INFO"
     WARNING = "WARNING"
     CRITICAL = "CRITICAL"
 
-
+# ConflictLogger: A safety net, it records the probelems.
 class ConflictLogger:
     """Lightweight conflict logging that returns warnings instead of crashing."""
     
@@ -69,13 +69,13 @@ class ConflictLogger:
             return "✓ No conflicts detected."
         return f"⚠️  ({len(self.warnings)} warnings logged)"
 
-
+# ENUM: 3 labels: DAILY, WEEKLY, and MONTHLY.
 class Frequency(str, Enum):
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
 
-
+# stores pet profiles and list of tasks.
 @dataclass
 class Pet:
     name: str
@@ -118,7 +118,7 @@ class Pet:
 
 _task_id_counter = iter(range(1, 10_000))
 
-
+# Taks class that handles scheduling, importance of task, it's due dates etc. 
 @dataclass
 class Task:
     task_type: str
@@ -219,7 +219,7 @@ class Task:
             f"{self.frequency.value} | {time_str}"
         )
 
-
+# Owner holds list of pets and available hours
 class Owner:
     def __init__(self, name: str, available_hours: List[int] = None, preferences: Dict[str, Any] = None):
         self.name = name
@@ -250,20 +250,6 @@ class Owner:
         """Return a flat list of every task across all pets."""
         return [task for pet in self.pets for task in pet.tasks]
 
-    def get_all_tasks_due_today(self) -> List[Task]:
-        """Return a flat list of today's due tasks across all pets."""
-        return [task for pet in self.pets for task in pet.get_tasks_due_today()]
-
-    # --- availability & preferences ---
-
-    def set_availability(self, hours: List[int]):
-        """Replace the owner's available hours with the provided list."""
-        self.available_hours = hours
-
-    def update_preferences(self, prefs: Dict[str, Any]):
-        """Merge the given preferences into the owner's existing preferences dict."""
-        self.preferences.update(prefs)
-
     def get_constraints(self) -> Dict[str, Any]:
         """Return the owner's scheduling constraints (available hours and preferences)."""
         return {
@@ -271,7 +257,7 @@ class Owner:
             "preferences": self.preferences,
         }
 
-
+# This is like a manager that schedules and manages all tasks by priority
 class Scheduler:
     def __init__(self, owner: Owner):
         self.owner = owner
@@ -408,26 +394,13 @@ class Scheduler:
 
         return "\n".join(lines) + "\n" + self.logger.get_warning_summary()
 
-    def get_tasks_sorted_by_time(self, date_for: Optional[date] = None) -> List[Task]:
+    def get_tasks_sorted_by_time(self, date_for: Optional[date] = None, generate=False) -> List[Task]:
         """Return tasks sorted by scheduled time; generate plan for given date if needed."""
-        if date_for is not None:
+        if generate and date_for:
             self.generate_plan(date_for)
 
         tasks = [t for t in self.owner.get_all_tasks() if t.scheduled_time is not None]
         return sorted(tasks, key=lambda t: (t.scheduled_time.hour, t.scheduled_time.minute))
-
-    def sort_by_time(self) -> List[Task]:
-        """Return a list of tasks sorted by scheduled time string HH:MM.
-        
-        Filters tasks that have scheduled_time set and sorts them lexicographically
-        by their time in "HH:MM" format using strftime.
-        
-        Returns:
-            List[Task]: Sorted list of scheduled tasks.
-        """
-        tasks = [t for t in self.owner.get_all_tasks() if t.scheduled_time is not None]
-        # Use HH:MM string for lexicographic ordering via lambda.
-        return sorted(tasks, key=lambda t: t.scheduled_time.strftime("%H:%M"))
 
     def filter_tasks(self, pet_name: Optional[str] = None, completed: Optional[bool] = None) -> List[Task]:
         """Return tasks filtered by pet name and/or completion status."""
@@ -465,7 +438,7 @@ class Scheduler:
                                 "type": "time_overlap",
                                 "task1": f"{task1.task_type} for {task1.pet.name}",
                                 "task2": f"{task2.task_type} for {task2.pet.name}",
-                                "time": f"{start1.strftime('%H:%M')}-{end1.strftime('%H:%M')} overlaps {start2.strftime('%H:%M')}-{end2.strftime('%H:%M')}"
+                                "time":  f"{start1.strftime('%H:%M')}-{end1.strftime('%H:%M')} overlaps {start2.strftime('%H:%M')}-{end2.strftime('%H:%M')}"
                             }
                             conflicts.append(conflict)
                             
@@ -492,13 +465,3 @@ class Scheduler:
                 continue
 
         return conflicts
-
-    # --- reporting ---
-
-    def get_tasks_by_pet(self) -> Dict[str, List[Task]]:
-        """Return all tasks grouped by pet name."""
-        return {pet.name: pet.tasks for pet in self.owner.pets}
-
-    def get_pending_tasks(self) -> List[Task]:
-        """Return all incomplete tasks across every pet."""
-        return [t for t in self.owner.get_all_tasks() if not t.completed]

@@ -78,7 +78,7 @@ for task in owner.get_all_tasks():
 
 print()
 print("Sorted by time:")
-for task in scheduler.sort_by_time():
+for task in scheduler.get_tasks_sorted_by_time(None):
     print(f"  {task.get_description()}")
 
 print()
