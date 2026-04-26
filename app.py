@@ -185,7 +185,7 @@ if st.button("Generate schedule"):
             with st.expander("View unscheduled tasks"):
                 for t in unscheduled:
                     st.error(t.get_description())
-                    
+
         if overlap_conflicts:
             st.error(f"{len(overlap_conflicts)} time overlap(s) detected in the schedule.")
             with st.expander("View overlap details"):
@@ -194,6 +194,8 @@ if st.button("Generate schedule"):
                     st.caption(c["time"])
         elif not unscheduled:
             st.success("No conflicts detected — all tasks fit cleanly.")    
+        with st.expander("View raw schedule summary"):
+            st.text(scheduler.get_plan_summary())
 st.divider()
 
 # ---------------------------------------------------------------------------
