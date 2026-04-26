@@ -136,6 +136,13 @@ class Task:
         """Mark this task as completed."""
         self.completed = True
 
+    def edit_details(self, task_type: str, duration: int, priority: int, frequency: Frequency):
+        """Update the task's core attributes in place."""
+        self.task_type = task_type
+        self.duration = duration
+        self.priority = priority
+        self.frequency = frequency
+
     def get_next_due_date(self) -> date:
         """Calculate the next due date based on frequency.
         

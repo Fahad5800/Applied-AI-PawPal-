@@ -22,6 +22,8 @@ if "overlap_conflicts" not in st.session_state:
     st.session_state.overlap_conflicts = []
 if "suggested_tasks" not in st.session_state:
     st.session_state.suggested_tasks = []
+if "editing_task_id" not in st.session_state:
+    st.session_state.editing_task_id = None
 
 # ---------------------------------------------------------------------------
 # Owner & Pet setup
@@ -114,7 +116,7 @@ PRIORITY_LABEL = {1: "🔴 High", 2: "🟠 Medium-High", 3: "🟡 Medium", 4: "�
 if st.session_state.scheduler:
     scheduler: Scheduler = st.session_state.scheduler
     pending = [t for t in scheduler.filter_tasks(completed=False) if t.is_due_today()]
-    
+
     if pending:
         pending_sorted = sorted(pending, key=lambda t: t.priority)
 
@@ -144,14 +146,60 @@ if st.session_state.scheduler:
             },
         )
 
-        st.write("**Delete a task:**")
-        task_options = {f"{t.task_type} ({t.pet.name})": t.id for t in pending_sorted}
-        selected_task = st.selectbox("Select task to delete", list(task_options.keys()))
-        if st.button("Delete Task"):
-            task_id = task_options[selected_task]
-            st.session_state.scheduler.remove_task(task_id)
-            st.success(f"Task **{selected_task}** deleted!")
-            st.rerun()
+        st.write("**Manage tasks:**")
+        task_options = {f"{t.task_type} ({t.pet.name})": t for t in pending_sorted}
+        selected_task_name = st.selectbox(
+            "Select a task", 
+            list(task_options.keys()),
+            key="manage_task_select"
+        )
+        selected_task = task_options[selected_task_name]
+
+        col_edit, col_delete = st.columns(2)
+        with col_edit:
+            if st.button("✏️ Edit Task"):
+                st.session_state.editing_task_id = selected_task.id
+
+        with col_delete:
+            if st.button("🗑️ Delete Task"):
+                st.session_state.scheduler.remove_task(selected_task.id)
+                st.success(f"Task **{selected_task_name}** deleted!")
+                st.rerun()
+
+        # --- Edit form ---
+        if st.session_state.get("editing_task_id") == selected_task.id:
+            st.write("**Edit task details:**")
+            with st.form("edit_task_form"):
+                new_title = st.text_input("Task title", value=selected_task.task_type)
+                new_duration = st.number_input(
+                    "Duration (min)", 
+                    min_value=1, max_value=240, 
+                    value=selected_task.duration
+                )
+                new_priority = st.selectbox(
+                    "Priority (1=high)", 
+                    [1, 2, 3, 4, 5],
+                    index=selected_task.priority - 1
+                )
+                new_frequency = st.selectbox(
+                    "Frequency",
+                    [f.value for f in Frequency],
+                    index=[f.value for f in Frequency].index(selected_task.frequency.value)
+                )
+                submitted = st.form_submit_button("💾 Save Changes")
+
+                if submitted:
+                    selected_task.edit_details(
+                        task_type=new_title,
+                        duration=new_duration,
+                        priority=new_priority,
+                        frequency=Frequency(new_frequency)
+                    )
+                    if new_duration != selected_task.duration:
+                        st.warning("Duration changed — regenerate schedule to reflect new timing.")
+                    st.session_state.editing_task_id = None
+                    st.success(f"Task updated successfully!")
+                    st.rerun()
     else:
         st.info("No pending tasks. Add one above.")
 
