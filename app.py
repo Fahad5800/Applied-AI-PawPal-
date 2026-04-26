@@ -14,6 +14,14 @@ if "owner" not in st.session_state:
     st.session_state.owner = None
 if "scheduler" not in st.session_state:
     st.session_state.scheduler = None
+if "sorted_tasks" not in st.session_state:
+    st.session_state.sorted_tasks = []
+if "unscheduled" not in st.session_state:
+    st.session_state.unscheduled = []
+if "overlap_conflicts" not in st.session_state:
+    st.session_state.overlap_conflicts = []
+if "suggested_tasks" not in st.session_state:
+    st.session_state.suggested_tasks = []
 
 # ---------------------------------------------------------------------------
 # Owner & Pet setup
@@ -105,8 +113,8 @@ PRIORITY_LABEL = {1: "🔴 High", 2: "🟠 Medium-High", 3: "🟡 Medium", 4: "�
 
 if st.session_state.scheduler:
     scheduler: Scheduler = st.session_state.scheduler
-    pending = scheduler.filter_tasks(completed=False)
-
+    pending = [t for t in scheduler.filter_tasks(completed=False) if t.is_due_today()]
+    
     if pending:
         pending_sorted = sorted(pending, key=lambda t: t.priority)
 
@@ -160,61 +168,96 @@ if st.button("Generate schedule"):
     else:
         scheduler: Scheduler = st.session_state.scheduler
         scheduler.generate_plan(date.today())
-
-        sorted_tasks = scheduler.get_tasks_sorted_by_time()
-        unscheduled = [
+        st.session_state.sorted_tasks = scheduler.get_tasks_sorted_by_time()
+        st.session_state.unscheduled = [
             t for t in scheduler.owner.get_all_tasks()
             if t.scheduled_time is None and not t.completed and t.is_due_today()
         ]
-        overlap_conflicts = [c for c in scheduler.conflicts if c.get("type") == "time_overlap"]
+        st.session_state.overlap_conflicts = [
+            c for c in scheduler.conflicts if c.get("type") == "time_overlap"
+        ]
 
-        # Summary metrics
-        col_sched, col_unsched, col_conflicts = st.columns(3)
-        col_sched.metric("Scheduled", len(sorted_tasks))
-        col_unsched.metric("Unscheduled", len(unscheduled))
-        col_conflicts.metric("Conflicts", len(overlap_conflicts) + len(unscheduled))
+# --- Display schedule (outside button block so it persists) ---
+if st.session_state.sorted_tasks:
+    scheduler: Scheduler = st.session_state.scheduler
+    sorted_tasks = st.session_state.sorted_tasks
+    unscheduled = st.session_state.get("unscheduled", [])
+    overlap_conflicts = st.session_state.get("overlap_conflicts", [])
 
-        if sorted_tasks:
-            st.success(f"Schedule generated — {len(sorted_tasks)} task(s) placed for today.")
-            st.write("**Today's schedule (sorted by time):**")
-            schedule_rows = [{
-                "Time": t.scheduled_time.strftime("%I:%M %p"),
-                "Task": t.task_type,
-                "Pet": t.pet.name,
-                "Duration (min)": t.duration,
-                "Priority": PRIORITY_LABEL.get(t.priority, str(t.priority)),
-            } for t in sorted_tasks]
+    col_sched, col_unsched, col_conflicts = st.columns(3)
+    col_sched.metric("Scheduled", len(sorted_tasks))
+    col_unsched.metric("Unscheduled", len(unscheduled))
+    col_conflicts.metric("Conflicts", len(overlap_conflicts) + len(unscheduled))
 
-            st.dataframe(
-                schedule_rows,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "Time": st.column_config.TextColumn("Time", width="small"),
-                    "Task": st.column_config.TextColumn("Task", width="large"),
-                    "Duration (min)": st.column_config.NumberColumn("Duration (min)", format="%d min"),
-                    "Priority": st.column_config.TextColumn("Priority", width="medium"),
-                },
-            )
-        else:
-            st.warning("No tasks could be scheduled for today.")
+    st.success(f"Schedule generated — {len(sorted_tasks)} task(s) placed for today.")
+    st.write("**Today's schedule (sorted by time):**")
 
-        if unscheduled:
-            st.warning(f"{len(unscheduled)} task(s) could not fit into available time slots.")
-            with st.expander("View unscheduled tasks"):
-                for t in unscheduled:
-                    st.error(t.get_description())
+    schedule_rows = [{
+        "Status": "✅ Done" if t.completed else "⏳ Pending",
+        "Time": t.scheduled_time.strftime("%I:%M %p") if t.scheduled_time else "—",
+        "Task": t.task_type,
+        "Pet": t.pet.name,
+        "Duration (min)": t.duration,
+        "Priority": PRIORITY_LABEL.get(t.priority, str(t.priority)),
+    } for t in sorted_tasks]
 
-        if overlap_conflicts:
-            st.error(f"{len(overlap_conflicts)} time overlap(s) detected in the schedule.")
-            with st.expander("View overlap details"):
-                for c in overlap_conflicts:
-                    st.warning(f"**{c['task1']}** overlaps **{c['task2']}**")
-                    st.caption(c["time"])
-        elif not unscheduled:
-            st.success("No conflicts detected — all tasks fit cleanly.")    
-        with st.expander("View raw schedule summary"):
-            st.text(scheduler.get_plan_summary())
+    st.dataframe(
+        schedule_rows,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Status": st.column_config.TextColumn("Status", width="small"),
+            "Time": st.column_config.TextColumn("Time", width="small"),
+            "Task": st.column_config.TextColumn("Task", width="large"),
+            "Duration (min)": st.column_config.NumberColumn("Duration (min)", format="%d min"),
+            "Priority": st.column_config.TextColumn("Priority", width="medium"),
+        },
+    )
+
+    # --- Mark Task Complete ---
+    st.write("**Mark a task as complete:**")
+    pending_scheduled = [t for t in sorted_tasks if not t.completed]
+
+    if pending_scheduled:
+        complete_options = {
+            f"{t.task_type} ({t.pet.name})": t.id
+            for t in pending_scheduled
+        }
+        selected_to_complete = st.selectbox(
+            "Select completed task",
+            list(complete_options.keys()),
+            key="complete_task_select"
+        )
+        if st.button("✅ Mark Complete"):
+            task_id = complete_options[selected_to_complete]
+            st.session_state.scheduler.mark_task_complete(task_id)
+            # Refresh sorted_tasks to reflect completion
+            st.session_state.sorted_tasks = [
+                t for t in st.session_state.sorted_tasks 
+                if t.id != task_id
+            ]
+            st.success(f"**{selected_to_complete}** marked as complete!")
+            st.rerun()
+    else:
+        st.success("🎉 All tasks completed for today!")
+
+    if unscheduled:
+        st.warning(f"{len(unscheduled)} task(s) could not fit into available time slots.")
+        with st.expander("View unscheduled tasks"):
+            for t in unscheduled:
+                st.error(t.get_description())
+
+    if overlap_conflicts:
+        st.error(f"{len(overlap_conflicts)} time overlap(s) detected in the schedule.")
+        with st.expander("View overlap details"):
+            for c in overlap_conflicts:
+                st.warning(f"**{c['task1']}** overlaps **{c['task2']}**")
+                st.caption(c["time"])
+    elif not unscheduled:
+        st.success("No conflicts detected — all tasks fit cleanly.")
+
+    with st.expander("View raw schedule summary"):
+        st.text(scheduler.get_plan_summary())
 st.divider()
 
 # ---------------------------------------------------------------------------
