@@ -1,3 +1,11 @@
+"""
+example_usage.py
+----------------
+This script demonstrates the core functionality of PawPal+ without the Streamlit UI.
+It shows how to create owners, pets, tasks, generate schedules, and detect conflicts.
+Useful for understanding the system's capabilities and testing the core logic.
+"""
+
 from datetime import date, time
 from pawpal_system import Owner, Pet, Task, Scheduler, Frequency
 
@@ -112,20 +120,5 @@ for task in scheduler.filter_tasks(completed=False):
 
 print("\nSchedule Summary:")
 print(scheduler.get_plan_summary())
-
-# Now manually set two tasks to the same time to demonstrate conflict detection
-grooming = [t for t in owner.get_all_tasks() if t.task_type == "Grooming Session"][0]
-training = [t for t in owner.get_all_tasks() if t.task_type == "Training Session"][0]
-grooming.scheduled_time = time(14, 0)  # 2:00 PM - 2:45 PM
-training.scheduled_time = time(14, 30)  # 2:30 PM - 3:00 PM, overlaps
-
-print("\nAfter manually setting overlapping times for Grooming and Training:")
-time_conflicts = scheduler.detect_time_conflicts()
-if time_conflicts:
-    print("Time conflicts detected:")
-    for conflict in time_conflicts:
-        print(f"  - {conflict['task1']} and {conflict['task2']} ({conflict['time']})")
-else:
-    print("No time conflicts.")
 
 print("=" * 50)
