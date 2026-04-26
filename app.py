@@ -40,7 +40,7 @@ if st.session_state.owner:
         st.metric("Owner", owner.name)
     for i, p in enumerate(pets):
         with cols[i + 1]:
-            st.metric(f"Pet {i + 1}", p.name, f"{p.species}, age {p.age}")
+            st.info(f"🐾 {p.get_summary()}")
 
 st.divider()
 
@@ -184,10 +184,8 @@ if st.button("Generate schedule"):
             st.warning(f"{len(unscheduled)} task(s) could not fit into available time slots.")
             with st.expander("View unscheduled tasks"):
                 for t in unscheduled:
-                    st.error(
-                        f"**{t.task_type}** — {t.pet.name} | {t.duration} min | priority {t.priority}"
-                    )
-
+                    st.error(t.get_description())
+                    
         if overlap_conflicts:
             st.error(f"{len(overlap_conflicts)} time overlap(s) detected in the schedule.")
             with st.expander("View overlap details"):

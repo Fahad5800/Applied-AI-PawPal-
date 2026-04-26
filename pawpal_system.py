@@ -84,13 +84,6 @@ class Pet:
     special_needs: List[str] = field(default_factory=list)
     tasks: List["Task"] = field(default_factory=list)
 
-    def update_info(self, name: str, species: str, age: int, special_needs: List[str]):
-        """Update the pet's profile fields in place."""
-        self.name = name
-        self.species = species
-        self.age = age
-        self.special_needs = special_needs
-
     def add_task(self, task: "Task"):
         """Append a task to this pet's task list."""
         self.tasks.append(task)
@@ -99,20 +92,11 @@ class Pet:
         """Remove the task with the given id from this pet's task list."""
         self.tasks = [t for t in self.tasks if t.id != task_id]
 
-    def get_tasks_due_today(self) -> List["Task"]:
-        """Return all tasks scheduled to occur today."""
-        return [t for t in self.tasks if t.is_due_today() and not t.completed]
-
-    def get_tasks_by_status(self, completed: bool) -> List["Task"]:
-        """Return tasks filtered by completion status."""
-        return [t for t in self.tasks if t.completed == completed]
-
     def get_summary(self) -> str:
         """Return a single-line string summarising the pet's key details."""
         needs = ", ".join(self.special_needs) if self.special_needs else "none"
         return (
-            f"{self.name} ({self.species}, age {self.age}) | "
-            f"special needs: {needs} | tasks: {len(self.tasks)}"
+            f"{self.name} ({self.species}, age {self.age})"
         )
 
 
@@ -158,10 +142,6 @@ class Task:
     def mark_complete(self):
         """Mark this task as completed."""
         self.completed = True
-
-    def reset(self):
-        """Reset the task to incomplete so it can be re-done."""
-        self.completed = False
 
     def get_next_due_date(self) -> date:
         """Calculate the next due date based on frequency.
