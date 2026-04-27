@@ -19,7 +19,8 @@ This project is an extension of **PawPal+** built during Module 3. The original 
 ---
 
 ## System Architecture
-![System Architecture](assets/System%20Architecture.png)
+![System Architecture](assets/system_architecture.png)
+
 
 The system has four main layers:
 1. **Streamlit UI** (`app.py`) — the user-facing interface
@@ -123,7 +124,6 @@ If I were to extend this further, I would add a local fallback model so the app 
 🎥 [Loom Walkthrough](https://www.loom.com/share/581f878d812d4713affbbc42029880a0)
 
 ---
-
 
 ## Portfolio Reflection
 This project demonstrates my ability to integrate AI into a real-world application responsibly and reliably. I extended an existing scheduling system with an AI advisor that provides pet care guidance with confidence scoring, graceful error handling, and clear guardrails. This project shows that I can not only call an AI API, but build something robust, testable, and production-minded around it.
