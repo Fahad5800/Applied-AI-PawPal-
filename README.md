@@ -8,10 +8,13 @@ This project is an extension of **PawPal+** built during Module 3. The original 
 ---
 
 ## What's New in the Final Version
-- **AI Care Advisor** — Ask natural language pet care questions and get answers powered by Gemini AI with a confidence score
-- **AI Task Suggester** — Automatically generate a starter task list based on your pet's species and age
-- **Guardrails** — Error handling and fallback messaging when the AI is unavailable
-- **Bug Fixes** — Updating and fixing bugs from previous PawPal+ system like deletion of tasks and updating PawPal+ UML diagram.
+- **Multiple Pet Support** — owners can add multiple pets and manage tasks per pet
+- **AI Care Advisor** — ask natural language pet care questions powered by Google Gemini with confidence scoring
+- **AI Task Suggester** — automatically generate a starter task list based on pet species and age
+- **Mark Task Complete** — mark tasks as done directly from the schedule view
+- **Edit Task Details** — update task name, duration, priority, and frequency inline
+- **Delete Tasks** — remove tasks directly from the pending tasks panel
+- **Guardrails** — graceful error handling when AI is unavailable
 
 ---
 
@@ -75,10 +78,13 @@ streamlit run app.py
 ---
 
 ## Design Decisions
-- **Gemini AI** was chosen for the free tier availability suitable for this project
-- **Greedy scheduling algorithm** was kept from the original — it's simple, fast, and predictable
-- **Confidence scoring** was added to help users understand when AI advice is reliable vs uncertain
-- **Session state** in Streamlit was used to persist suggested tasks between button clicks, solving a common re-render issue
+- **Gemini AI** was chosen for free tier availability suitable for a student project
+- **Greedy scheduling algorithm** was kept from the original — simple, fast, and predictable
+- **Confidence scoring** helps users know when AI advice is reliable vs uncertain
+- **Session state** in Streamlit persists data between button clicks solving re-render issues
+- **Layered architecture** — UI layer calls Scheduler layer which calls Pet/Task layer
+- **Non-crashing error handling** — ConflictLogger records problems without stopping execution
+- **Multiple pets** supported through Owner → Pet → Task hierarchy already built into the core systemue
 
 ---
 
@@ -107,9 +113,6 @@ python -m pytest
 ## Reflection
 This project taught me how to integrate AI into a real working application. The biggest challenge was handling API rate limits and model availability gracefully — the app needed to keep working even when the AI was unavailable. I learned that guardrails and fallback messaging are just as important as the AI features themselves.
 
-## Reflection
-This project taught me that building with AI is really two jobs in one: building the feature, and building the safety net around it. The AI advisor only works well because of the guardrails around it — without error handling, rate limit fallbacks, and confidence scoring, it would feel unreliable to a real user.
-
 I also learned that prompt design is a form of engineering. Getting the model to return clean, parseable JSON every time required careful iteration on the prompt format.
 
 If I were to extend this further, I would add a local fallback model so the app works completely offline, and a more sophisticated RAG system that pulls from a real pet care knowledge base rather than relying solely on the model's training data.
@@ -118,3 +121,9 @@ If I were to extend this further, I would add a local fallback model so the app 
 
 ## Demo
 🎥 [Loom Walkthrough](https://www.loom.com/share/581f878d812d4713affbbc42029880a0)
+
+---
+
+
+## Portfolio Reflection
+This project demonstrates my ability to integrate AI into a real-world application responsibly and reliably. I extended an existing scheduling system with an AI advisor that provides pet care guidance with confidence scoring, graceful error handling, and clear guardrails. This project shows that I can not only call an AI API, but build something robust, testable, and production-minded around it.
