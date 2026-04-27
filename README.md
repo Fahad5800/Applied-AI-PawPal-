@@ -117,4 +117,4 @@ If I were to extend this further, I would add a local fallback model so the app 
 ---
 
 ## Demo
-🎥 [Loom Walkthrough](your-loom-link-here) — *(add after recording)*
+🎥 [Loom Walkthrough](https://www.loom.com/share/581f878d812d4713affbbc42029880a0)
